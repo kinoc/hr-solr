@@ -1,6 +1,8 @@
 from bs4 import BeautifulSoup
 from sys import argv
 import http.client, urllib.parse
+import re, string
+pattern = re.compile('[\W_]+')
 
 script, conv = argv
 
@@ -22,11 +24,12 @@ for token in soup('category'):
 [
     {
         "id" : "DOC%s",
-        "title" : "%s"
+        "title" : "%s",
+        "template":"%s"
     }
 ]
-""" % (docCount, token.pattern.text)
-
+""" % (docCount, token.pattern.text," ".join(pattern.sub(' ', token.template.text).split()) )
+        print('BODY ', BODY)
         docCount = docCount + 1
 
         headers = {'Content-type': 'application/json'}
