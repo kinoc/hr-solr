@@ -16,6 +16,7 @@ def getWorkSheets(skey,engine):
    for link in soup.findAll('link', href=True):
       pagelink=link['href']
       if ("format=csv" in pagelink):
+        pagelink = pagelink.replace("format=csv","format=tsv")
         print "LINK:"+pagelink
         page = page + 1
         csvData = loadSheetViaURL(pagelink)
@@ -55,23 +56,27 @@ def generateAimlFromCSV(csvData):
    header = lines[0];
    aimlFile='<?xml version="1.0" encoding="ISO-8859-1"?>\n'
    aimlFile+='<aiml>\n'
-   reader = csv.DictReader(lines)
+   reader = csv.DictReader(lines, delimiter='\t')
    for row in reader:
       print row
       slots = {}
       slots['PATTERN']="*"
       slots['THAT']="*"
-      slots['TEMPLATE']="*"
+      slots['TEMPLATE']=""
       slots['TOPIC']="*"
-      category = " <category>\n  <pattern>XPATTERN</pattern>\n  <that>XTHAT</that>\n  <template>XTEMPLATE</template>\n </category>\n"
-      if (row['PATTERN']!=""): slots['PATTERN']=row['PATTERN'].upper()
-      if (row['THAT']!=""): slots['THAT']=row['THAT']
-      if (row['TEMPLATE']!=""): slots['TEMPLATE']=row['TEMPLATE']
-      if (row['TOPIC']!=""): slots['TOPIC']=row['TOPIC']
+      slots['REDUCE_TO']=""
+      category = " <category>\n  <pattern>XPATTERN</pattern>\n  <that>XTHAT</that>\n  <template>XTEMPLATEXREDUCE</template>\n </category>\n"
+      if (('PATTERN' in row ) and (row['PATTERN']!="")): slots['PATTERN']=row['PATTERN'].upper()
+      if (('THAT' in row ) and (row['THAT']!="")): slots['THAT']=row['THAT']
+      if (('TEMPLATE' in row ) and (row['TEMPLATE']!="")): slots['TEMPLATE']=row['TEMPLATE'].replace("#Comma",",")
+      if (('TOPIC' in row ) and (row['TOPIC']!="")): slots['TOPIC']=row['TOPIC']
+      if (('REDUCE_TO' in row ) and (row['REDUCE_TO']!="")): slots['REDUCE_TO']="<srai>"+row['REDUCE_TO']+"</srai>"
+
       category = category.replace("XPATTERN",slots['PATTERN'])
       category = category.replace("XTHAT",slots['THAT'])
       category = category.replace("XTEMPLATE",slots['TEMPLATE'])
       category = category.replace("XTOPIC",slots['TOPIC'])
+      category = category.replace("XREDUCE",slots['REDUCE_TO'])
       aimlFile += category
    aimlFile+="</aiml>"
    return aimlFile
